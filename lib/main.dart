@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/map_placeholder_screen.dart';
 import 'screens/favorites_placeholder_screen.dart';
+import 'theme/app_theme.dart';
 
 void main() {
   runApp(const ExploraEcApp());
@@ -14,6 +15,14 @@ class ExploraEcApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'ExploraEC',
+      // Paso 1 — tema de marca de ExploraEC aplicado en toda la app.
+      theme: AppTheme.theme,
+      // TODO(sesion-03): OPCIONAL — descomenta las dos líneas de abajo (Paso 6 — modo oscuro). No borres nada.
+      // Por qué: darkTheme le da a MaterialApp una segunda paleta, y
+      // ThemeMode.system elige entre las dos según la preferencia del
+      // dispositivo (Ajustes → Pantalla → Tema oscuro), sin código extra.
+      // darkTheme: AppTheme.darkTheme,
+      // themeMode: ThemeMode.system,
       home: const RootShell(),
     );
   }

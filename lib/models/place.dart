@@ -1,8 +1,3 @@
-/// Modelo de datos de ExploraEC — Sesión 2.
-///
-/// Por ahora vive únicamente en memoria: [lugaresEjemplo] es una lista
-/// escrita a mano. La Sesión 5 la reemplaza por datos reales obtenidos
-/// de la Overpass API (OpenStreetMap).
 class Place {
   final String id;
   final String nombre;
@@ -21,8 +16,6 @@ class Place {
   });
 }
 
-// Datos de ejemplo: 6 lugares reales de Quito para probar PlaceCard y
-// ListView.builder antes de conectar una fuente de datos real (Sesión 5).
 final List<Place> lugaresEjemplo = [
   Place(
     id: '1',
@@ -73,3 +66,11 @@ final List<Place> lugaresEjemplo = [
     lng: -78.5122,
   ),
 ];
+
+Future<List<Place>> fetchLugaresSimulado({bool forzarError = false, bool forzarVacio = false}) async {
+  await Future.delayed(const Duration(seconds: 1));
+  if (forzarError) {
+    throw Exception('No se pudo conectar con el servidor (simulado)');
+  }
+  return forzarVacio ? <Place>[] : lugaresEjemplo;
+}
