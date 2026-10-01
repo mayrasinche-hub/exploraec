@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'bindings/places_binding.dart';
+import 'controllers/places_controller.dart';
 import 'i18n/app_translations.dart';
 import 'screens/home_screen.dart';
 import 'screens/map_placeholder_screen.dart';
@@ -43,6 +44,8 @@ class _RootShellState extends State<RootShell> {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<PlacesController>();
+
     return Scaffold(
       body: switch (_indiceActual) {
         0 => const HomeScreen(),
@@ -55,7 +58,17 @@ class _RootShellState extends State<RootShell> {
         items: [
           BottomNavigationBarItem(icon: const Icon(Icons.home), label: 'inicio'.tr),
           BottomNavigationBarItem(icon: const Icon(Icons.map), label: 'mapa'.tr),
-          BottomNavigationBarItem(icon: const Icon(Icons.favorite), label: 'favoritos'.tr),
+          BottomNavigationBarItem(
+            icon: Obx(() {
+              final total = controller.totalFavoritos;
+              return Badge(
+                isLabelVisible: total > 0,
+                label: Text('$total'),
+                child: const Icon(Icons.favorite),
+              );
+            }),
+            label: 'favoritos'.tr,
+          ),
         ],
       ),
     );
