@@ -1,3 +1,8 @@
+/// Modelo de datos de ExploraEC — Sesión 2.
+///
+/// Por ahora vive únicamente en memoria: [lugaresEjemplo] es una lista
+/// escrita a mano. La Sesión 6 la reemplaza por datos reales obtenidos
+/// de la Overpass API (OpenStreetMap).
 class Place {
   final String id;
   final String nombre;
@@ -67,6 +72,12 @@ final List<Place> lugaresEjemplo = [
   ),
 ];
 
+/// Simula una llamada de red (Sesión 3): misma firma que la Sesión 6 va a
+/// usar con la Overpass API real — solo cambia la implementación interna,
+/// la interfaz (`Future<List<Place>>`) no cambia.
+///
+/// [forzarError] y [forzarVacio] existen solo para la práctica de hoy, para
+/// poder demostrar los 3 estados sin depender de una red real.
 Future<List<Place>> fetchLugaresSimulado({bool forzarError = false, bool forzarVacio = false}) async {
   await Future.delayed(const Duration(seconds: 1));
   if (forzarError) {

@@ -1,49 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import '../controllers/places_controller.dart';
 import '../models/place.dart';
-import '../widgets/place_card.dart';
-import '../widgets/loading_view.dart';
+import '../theme/app_theme.dart';
 import '../widgets/empty_view.dart';
 import '../widgets/error_view.dart';
-import '../theme/app_theme.dart';
+import '../widgets/loading_view.dart';
+import '../widgets/place_card.dart';
 import 'add_place_screen.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends GetView<PlacesController> {
   const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  late Future<List<Place>> _futuroLugares;
-  bool _modoDebugError = false;
-  bool _modoDebugVacio = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _cargar();
-  }
-
-  void _cargar() {
-    setState(() {
-      _futuroLugares = fetchLugaresSimulado(forzarError: _modoDebugError, forzarVacio: _modoDebugVacio);
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ExploraEC'),
+        title: Obx(() => Text('ExploraEC (${controller.total})')),
         actions: [
           PopupMenuButton<String>(
-            tooltip: 'Simular estado',
-            onSelected: (valor) {
-              _modoDebugError = valor == 'error';
-              _modoDebugVacio = valor == 'vacio';
-              _cargar();
-            },
+            tooltip: 'Simular estado (solo práctica)',
+            onSelected: controller.simular,
             itemBuilder: (context) => const [
               PopupMenuItem(value: 'normal', child: Text('Simular: normal')),
               PopupMenuItem(value: 'vacio', child: Text('Simular: vacío')),
@@ -52,30 +30,23 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<List<Place>>(
-        future: _futuroLugares,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const LoadingView(mensaje: 'Buscando lugares cercanos...');
-          }
-          if (snapshot.hasError) {
-            return ErrorView(mensaje: '${snapshot.error}', onReintentar: _cargar);
-          }
-          final lugares = snapshot.data ?? [];
-          if (lugares.isEmpty) {
-            return const EmptyView(mensaje: 'Todavía no hay lugares guardados');
-          }
-          return _buildLista(lugares);
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddPlaceScreen()),
+      body: Obx(() {
+        if (controller.estado.value == EstadoCarga.cargando) {
+          return const LoadingView(mensaje: 'Buscando lugares cercanos...');
+        }
+        if (controller.estado.value == EstadoCarga.error) {
+          return ErrorView(
+            mensaje: controller.mensajeError.value,
+            onReintentar: controller.cargarLugares,
           );
-          _cargar();
-        },
+        }
+        if (controller.lugares.isEmpty) {
+          return const EmptyView(mensaje: 'Todavía no hay lugares guardados');
+        }
+        return _buildLista(controller.lugares);
+      }),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Get.to(() => const AddPlaceScreen()),
         child: const Icon(Icons.add),
       ),
     );
