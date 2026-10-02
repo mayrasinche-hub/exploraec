@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'bindings/places_binding.dart';
-import 'controllers/places_controller.dart';
 import 'i18n/app_translations.dart';
 import 'screens/home_screen.dart';
-import 'screens/map_placeholder_screen.dart';
+import 'screens/map_screen.dart';
 import 'screens/favorites_placeholder_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -13,6 +12,11 @@ void main() {
   runApp(const ExploraEcApp());
 }
 
+/// `MaterialApp` → `GetMaterialApp` — Sesión 4. Sigue siendo Material por
+/// debajo (mismo `theme`, mismos widgets); `GetMaterialApp` agrega encima
+/// la navegación de GetX (`Get.to`, usada desde esta sesión en `PlaceCard`
+/// y `AddPlaceScreen`) y `initialBinding`, que registra `PlacesController`
+/// una sola vez, antes de que cualquier pantalla lo necesite.
 class ExploraEcApp extends StatelessWidget {
   const ExploraEcApp({super.key});
 
@@ -32,6 +36,7 @@ class ExploraEcApp extends StatelessWidget {
   }
 }
 
+/// Contenedor raíz con la barra de navegación inferior — Sesión 2.
 class RootShell extends StatefulWidget {
   const RootShell({super.key});
 
@@ -44,12 +49,10 @@ class _RootShellState extends State<RootShell> {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<PlacesController>();
-
     return Scaffold(
       body: switch (_indiceActual) {
         0 => const HomeScreen(),
-        1 => const MapPlaceholderScreen(),
+        1 => const MapScreen(),
         _ => const FavoritesPlaceholderScreen(),
       },
       bottomNavigationBar: BottomNavigationBar(
@@ -58,17 +61,7 @@ class _RootShellState extends State<RootShell> {
         items: [
           BottomNavigationBarItem(icon: const Icon(Icons.home), label: 'inicio'.tr),
           BottomNavigationBarItem(icon: const Icon(Icons.map), label: 'mapa'.tr),
-          BottomNavigationBarItem(
-            icon: Obx(() {
-              final total = controller.totalFavoritos;
-              return Badge(
-                isLabelVisible: total > 0,
-                label: Text('$total'),
-                child: const Icon(Icons.favorite),
-              );
-            }),
-            label: 'favoritos'.tr,
-          ),
+          BottomNavigationBarItem(icon: const Icon(Icons.favorite), label: 'favoritos'.tr),
         ],
       ),
     );
