@@ -43,10 +43,7 @@ class LocationService {
     }
 
     return Geolocator.getCurrentPosition(
-      locationSettings: AndroidSettings(
-        accuracy: LocationAccuracy.high,
-        forceLocationManager: true,
-      ),
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
     );
   }
 }

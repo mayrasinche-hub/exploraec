@@ -50,6 +50,10 @@ class _MapScreenState extends State<MapScreen> {
         }
         return _buildMapa(context, controller.posicion.value!, controller.lugares);
       }),
+      // Por qué: el `mapController` de arriba ya está conectado al
+      // `FlutterMap`; este botón lo usa como "control remoto" para volver
+      // a la posición del usuario con `move(...)` después de arrastrar el
+      // mapa, sin que la persona tenga que buscarse a mano.
       floatingActionButton: FloatingActionButton(
         tooltip: 'Centrar en mi ubicación',
         onPressed: () {

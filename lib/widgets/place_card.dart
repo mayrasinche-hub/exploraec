@@ -4,8 +4,8 @@ import 'package:get/get.dart';
 import '../controllers/places_controller.dart';
 import '../models/place.dart';
 import '../screens/detail_screen.dart';
-import '../services/location_service.dart';
 import '../theme/app_theme.dart';
+import '../services/location_service.dart';
 
 /// Tarjeta reutilizable que representa un [Place] en cualquier lista de
 /// la app (Inicio, resultados de categoría, etc.) — Sesión 2.
@@ -79,6 +79,10 @@ class PlaceCard extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(place.categoria, style: estilos.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                // Por qué: `distanciaA` devuelve null mientras el controller
+                // no tiene la posición (antes de abrir el Mapa), así que el
+                // `Obx` no pinta nada; apenas `posicion` se llena, todas las
+                // tarjetas muestran la distancia sin recargar la lista.
                 Obx(() {
                   final metros = Get.find<PlacesController>().distanciaA(place);
                   if (metros == null) return const SizedBox.shrink();
