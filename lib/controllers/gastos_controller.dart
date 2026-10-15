@@ -8,11 +8,21 @@ import '../services/gastos_api_service.dart';
 import 'auth_controller.dart';
 import 'places_controller.dart' show EstadoCarga;
 
+/// Categorías distintas que aparecen en [gastos], en el orden en que aparecen.
+List<String> categoriasDe(List<Gasto> gastos) => gastos.map((g) => g.categoria).toSet().toList();
+
+/// Devuelve solo los gastos de [categoria]. Con `null` («Todas») o con una
+/// categoría que ya no tiene gastos, devuelve la lista completa.
+List<Gasto> filtrarPorCategoria(List<Gasto> gastos, String? categoria) {
+  if (categoria == null || !gastos.any((g) => g.categoria == categoria)) return gastos;
+  return gastos.where((g) => g.categoria == categoria).toList();
+}
+
 /// Estado de la sección Gastos (patrón de la Sesión 4: el controller guarda
 /// el estado y `Obx` reconstruye la pantalla). Desde la Sesión 7 los gastos
 /// pasan por `GastosRepository` (servidor primero, caché de Hive como
 /// respaldo). Desde la Sesión 8 la sesión la maneja `AuthController` y aquí
-/// se agrega el CRUD completo.
+/// se agrega el CRUD completo. Desde la Sesión 10, el filtro por categoría.
 class GastosController extends GetxController {
   final AuthController _auth = Get.find<AuthController>();
   late final GastosApiService _api = GastosApiService(Get.find<ApiClient>());
@@ -25,6 +35,14 @@ class GastosController extends GetxController {
 
   /// Categorías que define el backend (`GET /gastos/categorias`).
   final RxList<String> categorias = <String>[].obs;
+
+  /// Categoría elegida en el filtro de la pantalla Gastos; `null` es «Todas».
+  final RxnString categoriaFiltro = RxnString();
+
+  /// Gastos que se muestran en la lista según el filtro elegido.
+  List<Gasto> get gastosFiltrados => filtrarPorCategoria(gastos, categoriaFiltro.value);
+
+  void elegirCategoria(String? categoria) => categoriaFiltro.value = categoria;
 
   /// `true` solo cuando la última carga exitosa vino de la caché local (el
   /// servidor no respondió): la UI lo usa para avisar «datos guardados».
@@ -126,6 +144,7 @@ class GastosController extends GetxController {
     await _repository.vaciar();
     gastos.clear();
     categorias.clear();
+    categoriaFiltro.value = null;
     totalEnServidor.value = 0;
     desdeCache.value = false;
     mensajeError.value = '';

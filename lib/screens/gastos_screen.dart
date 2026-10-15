@@ -7,6 +7,7 @@ import '../controllers/gastos_controller.dart';
 import '../controllers/places_controller.dart' show EstadoCarga;
 import '../models/gasto.dart';
 import '../services/api_exception.dart';
+import 'pantalla_con_fallo.dart';
 import '../widgets/empty_view.dart';
 import '../widgets/error_view.dart';
 import '../widgets/loading_view.dart';
@@ -16,7 +17,7 @@ import 'gasto_form_screen.dart';
 
 /// Sección «Gastos del viaje» — Sesión 6. Desde la Sesión 8 solo se muestra
 /// con sesión iniciada (si no, `SinSesionView`) y permite crear, editar y
-/// eliminar gastos.
+/// eliminar gastos. Desde la Sesión 10 tiene un filtro por categoría.
 class GastosScreen extends GetView<GastosController> {
   const GastosScreen({super.key});
 
@@ -46,13 +47,26 @@ class GastosScreen extends GetView<GastosController> {
             onSelected: (valor) {
               if (valor == 'salir') auth.cerrarSesion();
               if (valor == 'invalidar') auth.invalidarTokenParaPruebas();
-                            if (valor == 'password') Get.to(() => const CambiarPasswordScreen());
+              if (valor == 'password') Get.to(() => const CambiarPasswordScreen());
+              // Solo práctica (Sesión 10, Paso 2): provocan errores a propósito.
+              if (valor == 'error_pantalla') Get.to(() => const PantallaConFallo());
+              if (valor == 'error_async') {
+                Future<void>.delayed(Duration.zero, () => throw StateError('Fallo asíncrono provocado a propósito'));
+              }
+              // Por qué: pantalla opcional con las licencias de los paquetes que usa la app.
+              // TODO(sesion-10) OPCIONAL Paso 10: descomenta la línea de abajo (abrir «Acerca de»).
+              // if (valor == 'acerca') showLicensePage(context: context, applicationName: 'ExploraEC', applicationVersion: '1.0.0');
             },
             itemBuilder: (context) => [
               const PopupMenuItem(value: 'password', child: Text('Cambiar contraseña')),
               const PopupMenuItem(value: 'salir', child: Text('Cerrar sesión')),
-              if (kDebugMode)
-                const PopupMenuItem(value: 'invalidar', child: Text('Invalidar token (solo práctica)')),
+              // TODO(sesion-10) OPCIONAL Paso 10: descomenta la línea de abajo (opción del menú).
+              // const PopupMenuItem(value: 'acerca', child: Text('Acerca de')),
+              if (kDebugMode) ...const [
+                PopupMenuItem(value: 'invalidar', child: Text('Invalidar token (solo práctica)')),
+                PopupMenuItem(value: 'error_pantalla', child: Text('Error de pantalla (solo práctica)')),
+                PopupMenuItem(value: 'error_async', child: Text('Error asíncrono (solo práctica)')),
+              ],
             ],
           ),
         ],
@@ -89,10 +103,17 @@ class GastosScreen extends GetView<GastosController> {
                   ),
                 ],
               ),
+            // Por qué (Sesión 10): los chips salen de las categorías que tienen
+            // gastos; «Todas» quita el filtro.
+            FiltroCategoria(
+              categorias: categoriasDe(controller.gastos),
+              seleccionada: controller.categoriaFiltro.value,
+              alElegir: controller.elegirCategoria,
+            ),
             Expanded(
               child: RefreshIndicator(
                 onRefresh: controller.cargarGastos,
-                child: _buildLista(context, controller.gastos),
+                child: _buildLista(context, controller.gastosFiltrados),
               ),
             ),
           ],
@@ -148,5 +169,43 @@ class GastosScreen extends GetView<GastosController> {
     } on ApiException catch (e) {
       Get.snackbar('No se pudo eliminar', e.mensaje);
     }
+  }
+}
+
+/// Fila de chips para filtrar la lista de gastos por categoría (Sesión 10).
+/// «Todas» se representa con `null`.
+class FiltroCategoria extends StatelessWidget {
+  const FiltroCategoria({
+    super.key,
+    required this.categorias,
+    required this.seleccionada,
+    required this.alElegir,
+  });
+
+  final List<String> categorias;
+  final String? seleccionada;
+  final ValueChanged<String?> alElegir;
+
+  @override
+  Widget build(BuildContext context) {
+    // Si la categoría elegida ya no tiene gastos, se marca «Todas».
+    final actual = categorias.contains(seleccionada) ? seleccionada : null;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          _chip('Todas', actual == null, () => alElegir(null)),
+          for (final c in categorias) _chip(c, actual == c, () => alElegir(c)),
+        ],
+      ),
+    );
+  }
+
+  Widget _chip(String texto, bool elegido, VoidCallback alTocar) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: ChoiceChip(label: Text(texto), selected: elegido, onSelected: (_) => alTocar()),
+    );
   }
 }
